@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>{{ resume.candidate_name }} - Resume</title>
+<style>
+  @page { size: letter; margin: 0.6in 0.7in; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; color: #1a1a1a; line-height: 1.35; }
+  h1 { font-size: 22pt; margin: 0 0 2pt 0; }
+  h2 { font-size: 10.5pt; text-transform: uppercase; letter-spacing: 1pt;
+       border-bottom: 1px solid #1a1a1a; padding-bottom: 2pt;
+       margin-top: 14pt; margin-bottom: 6pt; }
+  p { margin: 0 0 4pt 0; }
+  ul { margin: 2pt 0 6pt 14pt; padding: 0; }
+  li { margin: 1pt 0; }
+  .contact { color: #444; font-size: 9.5pt; margin-bottom: 6pt; }
+  .entry { margin-bottom: 8pt; }
+  .head-table { width: 100%; }
+  .head-table .title { font-weight: bold; font-size: 10.5pt; }
+  .head-table .meta { color: #555; font-style: italic; font-size: 9.5pt; text-align: right; }
+  .sub { color: #333; font-size: 9.5pt; margin-bottom: 2pt; }
+  .skill { display: inline; padding: 1pt 6pt; margin: 0 4pt 2pt 0;
+           border: 1px solid #bbb; border-radius: 3pt; font-size: 9.5pt; }
+  .skill-row { line-height: 1.8; }
+</style>
+</head>
+<body>
+  <h1>{{ resume.candidate_name }}</h1>
+  {% if resume.contact %}
+    {% set parts = [] %}
+    {% for k, v in resume.contact.items() %}{% if v %}{% set _ = parts.append(v) %}{% endif %}{% endfor %}
+    {% if parts %}<div class="contact">{{ parts | join(" • ") }}</div>{% endif %}
+  {% endif %}
+
+  {% if resume.professional_summary %}
+    <h2>Professional Summary</h2>
+    <p>{{ resume.professional_summary }}</p>
+  {% endif %}
+
+  {% if resume.technical_skills %}
+    <h2>Technical Skills</h2>
+    <div class="skill-row">
+      {% for s in resume.technical_skills %}<span class="skill">{{ s }}</span>{% endfor %}
+    </div>
+  {% endif %}
+
+  {% if resume.experience %}
+    <h2>Experience</h2>
+    {% for job in resume.experience %}
+      <div class="entry">
+        <table class="head-table" cellspacing="0" cellpadding="0"><tr>
+          <td class="title">{{ job.role }} &mdash; {{ job.company }}</td>
+          <td class="meta">{% if job.start_date or job.end_date %}{{ job.start_date or "" }} - {{ job.end_date or "Present" }}{% endif %}</td>
+        </tr></table>
+        {% if job.location %}<div class="sub">{{ job.location }}</div>{% endif %}
+        {% if job.bullets %}
+          <ul>{% for b in job.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if resume.projects %}
+    <h2>Projects</h2>
+    {% for p in resume.projects %}
+      <div class="entry">
+        <table class="head-table" cellspacing="0" cellpadding="0"><tr>
+          <td class="title">{{ p.name }}</td>
+          <td class="meta">{% if p.tech %}{{ p.tech | join(", ") }}{% endif %}</td>
+        </tr></table>
+        {% if p.description %}<div class="sub">{{ p.description }}</div>{% endif %}
+        {% if p.bullets %}
+          <ul>{% for b in p.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if resume.education %}
+    <h2>Education</h2>
+    {% for ed in resume.education %}
+      <div class="entry">
+        <table class="head-table" cellspacing="0" cellpadding="0"><tr>
+          <td class="title">{{ ed.degree }} &mdash; {{ ed.institution }}</td>
+          <td class="meta">{% if ed.start_date %}{{ ed.start_date }}{% endif %}{% if ed.start_date and ed.end_date %} - {% endif %}{% if ed.end_date %}{{ ed.end_date }}{% endif %}</td>
+        </tr></table>
+        {% if ed.location %}<div class="sub">{{ ed.location }}</div>{% endif %}
+        {% if ed.details %}<div class="sub">{{ ed.details }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if resume.certifications %}
+    <h2>Certifications</h2>
+    <ul>{% for c in resume.certifications %}<li>{{ c }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if resume.achievements %}
+    <h2>Achievements</h2>
+    <ul>{% for a in resume.achievements %}<li>{{ a }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if resume.tools_technologies %}
+    <h2>Tools &amp; Technologies</h2>
+    <div class="skill-row">
+      {% for t in resume.tools_technologies %}<span class="skill">{{ t }}</span>{% endfor %}
+    </div>
+  {% endif %}
+</body>
+</html>
