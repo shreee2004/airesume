@@ -7,7 +7,12 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.schemas import ExperienceLevel, GenerateResponse, Tone
 from app.services.claude_client import generate_analysis
-from app.services.pdf_extract import PdfExtractionError, extract_text
+from app.services.pdf_extract import (
+    NotAResumeError,
+    PdfExtractionError,
+    assert_is_resume,
+    extract_text,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -46,6 +51,11 @@ async def generate(
     try:
         resume_text = extract_text(raw)
     except PdfExtractionError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    try:
+        assert_is_resume(resume_text)
+    except NotAResumeError as exc:
         raise HTTPException(422, str(exc)) from exc
 
     try:

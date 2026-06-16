@@ -17,6 +17,10 @@ class PdfExtractionError(Exception):
     """Raised when the PDF cannot be parsed or contains no extractable text."""
 
 
+class NotAResumeError(Exception):
+    """Raised when an uploaded PDF parses fine but does not look like a resume."""
+
+
 # Map of common Unicode characters that PDFs often emit as garbled glyphs to
 # safe ASCII replacements. We do this AFTER NFKC normalization so most of
 # the obvious cases (smart quotes, fi/fl ligatures, etc.) are already handled.
@@ -76,3 +80,60 @@ def extract_text(file_bytes: bytes) -> str:
             "document, please upload a digital (text-based) PDF."
         )
     return text
+
+
+# Section headers / phrases that are characteristic of a resume or CV. A genuine
+# resume reliably hits several of these; certificates, offer letters, invoices,
+# and other documents almost never do.
+_RESUME_SIGNALS = (
+    r"work experience",
+    r"professional experience",
+    r"employment history",
+    r"\beducation\b",
+    r"\bskills?\b",
+    r"technical skills",
+    r"work history",
+    r"\bprojects?\b",
+    r"certifications?",
+    r"achievements?",
+    r"\bsummary\b",
+    r"objective",
+    r"references?",
+    r"curriculum vitae",
+    r"\bresume\b",
+    r"\bcv\b",
+)
+
+# Phrases that strongly indicate the document is a *certificate* rather than a
+# resume. These short-circuit acceptance even if a stray resume keyword appears.
+_CERTIFICATE_SIGNALS = (
+    r"this is to certify",
+    r"certificate of (completion|achievement|participation|appreciation|excellence)",
+    r"has successfully completed",
+    r"is hereby awarded",
+    r"in recognition of",
+)
+
+
+def assert_is_resume(text: str) -> None:
+    """Reject text that does not look like a resume.
+
+    Heuristic, not perfect: we require at least two distinct resume-style
+    section signals and bail out early if the document reads like a certificate.
+    Raises :class:`NotAResumeError` when the check fails.
+    """
+    lowered = text.lower()
+
+    for pattern in _CERTIFICATE_SIGNALS:
+        if re.search(pattern, lowered):
+            raise NotAResumeError(
+                "This looks like a certificate, not a resume. Please upload "
+                "your resume or CV."
+            )
+
+    matches = sum(1 for pattern in _RESUME_SIGNALS if re.search(pattern, lowered))
+    if matches < 2:
+        raise NotAResumeError(
+            "This file does not look like a resume. Please upload your resume "
+            "or CV (we can't accept certificates or other documents)."
+        )
